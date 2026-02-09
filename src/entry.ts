@@ -8,9 +8,12 @@ import { installProcessWarningFilter } from "./infra/warning-filter.js";
 import { attachChildProcessBridge } from "./process/child-process-bridge.js";
 
 process.title = "openclaw";
+// STUDY: 在这里输入你的疑问
 installProcessWarningFilter();
+// STUDY: 在这里输入你的疑问
 normalizeEnv();
 
+// LEARNED: 禁用色彩输出
 if (process.argv.includes("--no-color")) {
   process.env.NO_COLOR = "1";
   process.env.FORCE_COLOR = "0";
@@ -18,6 +21,7 @@ if (process.argv.includes("--no-color")) {
 
 const EXPERIMENTAL_WARNING_FLAG = "--disable-warning=ExperimentalWarning";
 
+// LEARNED: 是否已抑制实验性警告
 function hasExperimentalWarningSuppressed(): boolean {
   const nodeOptions = process.env.NODE_OPTIONS ?? "";
   if (nodeOptions.includes(EXPERIMENTAL_WARNING_FLAG) || nodeOptions.includes("--no-warnings")) {
@@ -31,13 +35,18 @@ function hasExperimentalWarningSuppressed(): boolean {
   return false;
 }
 
+// LEARNED: 确保禁止实验性警告
 function ensureExperimentalWarningSuppressed(): boolean {
+  // LEARNED: 禁用 respawn，直接返回
   if (isTruthyEnvValue(process.env.OPENCLAW_NO_RESPAWN)) {
     return false;
   }
+  // NOTE: 先检查内部配置，后检查外部配置，双重保险
+  // LEARNED: 已经 respawn，直接返回，避免无限递归
   if (isTruthyEnvValue(process.env.OPENCLAW_NODE_OPTIONS_READY)) {
     return false;
   }
+  // LEARNED: 已经抑制警告，直接返回
   if (hasExperimentalWarningSuppressed()) {
     return false;
   }
@@ -45,6 +54,7 @@ function ensureExperimentalWarningSuppressed(): boolean {
   // Respawn guard (and keep recursion bounded if something goes wrong).
   process.env.OPENCLAW_NODE_OPTIONS_READY = "1";
   // Pass flag as a Node CLI option, not via NODE_OPTIONS (--disable-warning is disallowed in NODE_OPTIONS).
+  // LEARNED: 启动子进程，带上抑制警告标志
   const child = spawn(
     process.execPath,
     [EXPERIMENTAL_WARNING_FLAG, ...process.execArgv, ...process.argv.slice(1)],
@@ -54,6 +64,7 @@ function ensureExperimentalWarningSuppressed(): boolean {
     },
   );
 
+  // STUDY: 待学习：描述需要攻克的知识点或代码逻辑
   attachChildProcessBridge(child);
 
   child.once("exit", (code, signal) => {

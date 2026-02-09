@@ -55,6 +55,7 @@ export async function runCli(argv: string[] = process.argv) {
 
   const parseArgv = rewriteUpdateFlagArgv(normalizedArgv);
   // Register the primary subcommand if one exists (for lazy-loading)
+  // LEARNED: 获取主参数
   const primary = getPrimaryCommand(parseArgv);
   if (primary) {
     const { registerSubCliByName } = await import("./program/register.subclis.js");

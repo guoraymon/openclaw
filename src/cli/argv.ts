@@ -78,6 +78,7 @@ export function getPositiveIntFlagValue(argv: string[], name: string): number | 
 }
 
 export function getCommandPath(argv: string[], depth = 2): string[] {
+  // LEARNED: 跳过 [node, xxx.js]
   const args = argv.slice(2);
   const path: string[] = [];
   for (let i = 0; i < args.length; i += 1) {
@@ -99,6 +100,7 @@ export function getCommandPath(argv: string[], depth = 2): string[] {
   return path;
 }
 
+// LEARNED: 获取主命令
 export function getPrimaryCommand(argv: string[]): string | null {
   const [primary] = getCommandPath(argv, 1);
   return primary ?? null;

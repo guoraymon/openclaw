@@ -253,11 +253,13 @@ function removeCommand(program: Command, command: Command) {
   }
 }
 
+// LEARNED: 注册子命令
 export async function registerSubCliByName(program: Command, name: string): Promise<boolean> {
   const entry = entries.find((candidate) => candidate.name === name);
   if (!entry) {
     return false;
   }
+  // LEARNED: 允许重新注册
   const existing = program.commands.find((cmd) => cmd.name() === entry.name);
   if (existing) {
     removeCommand(program, existing);

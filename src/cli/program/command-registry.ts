@@ -163,11 +163,13 @@ export const commandRegistry: CommandRegistration[] = [
   },
 ];
 
+// LEARNED: 注册程序命令
 export function registerProgramCommands(
   program: Command,
   ctx: ProgramContext,
   argv: string[] = process.argv,
 ) {
+  // LEARNED: 注册全部命令
   for (const entry of commandRegistry) {
     entry.register({ program, ctx, argv });
   }

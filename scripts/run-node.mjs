@@ -8,6 +8,7 @@ const args = process.argv.slice(2);
 const env = { ...process.env };
 const cwd = process.cwd();
 const compiler = "tsdown";
+// NOTE: --no-clean：增量编译
 const compilerArgs = ["exec", compiler, "--no-clean"];
 
 const distRoot = path.join(cwd, "dist");
@@ -16,6 +17,7 @@ const buildStampPath = path.join(distRoot, ".buildstamp");
 const srcRoot = path.join(cwd, "src");
 const configFiles = [path.join(cwd, "tsconfig.json"), path.join(cwd, "package.json")];
 
+// NOTE: 获取文件mtime
 const statMtime = (filePath) => {
   try {
     return fs.statSync(filePath).mtimeMs;
@@ -24,6 +26,7 @@ const statMtime = (filePath) => {
   }
 };
 
+// NOTE: 排除测试文件
 const isExcludedSource = (filePath) => {
   const relativePath = path.relative(srcRoot, filePath);
   if (relativePath.startsWith("..")) {
@@ -36,9 +39,11 @@ const isExcludedSource = (filePath) => {
   );
 };
 
+// NOTE: 查找最后时间戳
 const findLatestMtime = (dirPath, shouldSkip) => {
   let latest = null;
   const queue = [dirPath];
+  // NOTE: 广度优先搜索
   while (queue.length > 0) {
     const current = queue.pop();
     if (!current) {
@@ -52,20 +57,25 @@ const findLatestMtime = (dirPath, shouldSkip) => {
     }
     for (const entry of entries) {
       const fullPath = path.join(current, entry.name);
+      // NOTE: 递归子目录
       if (entry.isDirectory()) {
         queue.push(fullPath);
         continue;
       }
+      // NOTE: 跳过符号链接、套接字、设备文件等
       if (!entry.isFile()) {
         continue;
       }
+      // NOTE: 指定跳过
       if (shouldSkip?.(fullPath)) {
         continue;
       }
       const mtime = statMtime(fullPath);
+      // LEARN: 文件丢失、权限不足等情况
       if (mtime == null) {
         continue;
       }
+      // NOTE: 更新最后时间戳
       if (latest == null || mtime > latest) {
         latest = mtime;
       }
@@ -74,18 +84,23 @@ const findLatestMtime = (dirPath, shouldSkip) => {
   return latest;
 };
 
+// NOTE: 构建检查
 const shouldBuild = () => {
+  // NOTE: 强制构建
   if (env.OPENCLAW_FORCE_BUILD === "1") {
     return true;
   }
+  // NOTE: 首次构建
   const stampMtime = statMtime(buildStampPath);
   if (stampMtime == null) {
     return true;
   }
+  // NOTE: 构建丢失
   if (statMtime(distEntry) == null) {
     return true;
   }
 
+  // NOTE: 配置变更
   for (const filePath of configFiles) {
     const mtime = statMtime(filePath);
     if (mtime != null && mtime > stampMtime) {
@@ -93,6 +108,7 @@ const shouldBuild = () => {
     }
   }
 
+  // NOTE: 源文件变更
   const srcMtime = findLatestMtime(srcRoot, isExcludedSource);
   if (srcMtime != null && srcMtime > stampMtime) {
     return true;
@@ -122,6 +138,7 @@ const runNode = () => {
   });
 };
 
+// NOTE: 写入构建时间戳
 const writeBuildStamp = () => {
   try {
     fs.mkdirSync(distRoot, { recursive: true });
@@ -136,9 +153,11 @@ if (!shouldBuild()) {
   runNode();
 } else {
   logRunner("Building TypeScript (dist is stale).");
+  // NOTE: 跨平台构建命令
   const buildCmd = process.platform === "win32" ? "cmd.exe" : "pnpm";
   const buildArgs =
     process.platform === "win32" ? ["/d", "/s", "/c", "pnpm", ...compilerArgs] : compilerArgs;
+  // NOTE: pnpm exec tsdown --no-clean
   const build = spawn(buildCmd, buildArgs, {
     cwd,
     env,

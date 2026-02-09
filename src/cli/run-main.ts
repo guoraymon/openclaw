@@ -13,6 +13,7 @@ import { enableConsoleCapture } from "../logging.js";
 import { getPrimaryCommand, hasHelpOrVersion } from "./argv.js";
 import { tryRouteCli } from "./route.js";
 
+// LEARNED: 参数重写。如果有 --update，重写为 update
 export function rewriteUpdateFlagArgv(argv: string[]): string[] {
   const index = argv.indexOf("--update");
   if (index === -1) {

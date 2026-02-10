@@ -91,13 +91,17 @@ export async function runOnboardingWizard(
   runtime: RuntimeEnv = defaultRuntime,
   prompter: WizardPrompter,
 ) {
+  // LEARNED: 打印向导头部（LOGO）
   printWizardHeader(runtime);
   await prompter.intro("OpenClaw onboarding");
+  // LEARNED: 安全警告
   await requireRiskAcknowledgement({ opts, prompter });
 
+  // LEARNED: 读取已有配置文件
   const snapshot = await readConfigFileSnapshot();
   let baseConfig: OpenClawConfig = snapshot.valid ? snapshot.config : {};
 
+  // LEARNED: 配置文件无效处理
   if (snapshot.exists && !snapshot.valid) {
     await prompter.note(summarizeExistingConfig(baseConfig), "Invalid config");
     if (snapshot.issues.length > 0) {
@@ -130,10 +134,12 @@ export async function runOnboardingWizard(
     runtime.exit(1);
     return;
   }
+  // LEARNED: 明确的流程模式：quicksatrt、advanced
   const explicitFlow: WizardFlow | undefined =
     normalizedExplicitFlow === "quickstart" || normalizedExplicitFlow === "advanced"
       ? normalizedExplicitFlow
       : undefined;
+  // LEARNED: 没有明确指定，就使用 select 让用户选择
   let flow: WizardFlow =
     explicitFlow ??
     (await prompter.select({
@@ -144,7 +150,7 @@ export async function runOnboardingWizard(
       ],
       initialValue: "quickstart",
     }));
-
+  // LEARNED: remote 模式只能使用 advanced 模式配置
   if (opts.mode === "remote" && flow === "quickstart") {
     await prompter.note(
       "QuickStart only supports local gateways. Switching to Manual mode.",
@@ -153,6 +159,7 @@ export async function runOnboardingWizard(
     flow = "advanced";
   }
 
+  // LEARNED: 已有配置文件处理
   if (snapshot.exists) {
     await prompter.note(summarizeExistingConfig(baseConfig), "Existing config detected");
 
@@ -268,6 +275,7 @@ export async function runOnboardingWizard(
       }
       return "Funnel";
     };
+    // LEARNED: 快速开始默认值
     const quickstartLines = quickstartGateway.hasExisting
       ? [
           "Keeping your current gateway settings:",
@@ -305,6 +313,7 @@ export async function runOnboardingWizard(
       })
     : null;
 
+  // LEARNED: 部署模式
   const mode =
     opts.mode ??
     (flow === "quickstart"
@@ -331,6 +340,7 @@ export async function runOnboardingWizard(
           ],
         })) as OnboardMode));
 
+  // LEARNED: 远程模式无需后续配置，直接退出
   if (mode === "remote") {
     let nextConfig = await promptRemoteGatewayConfig(baseConfig, prompter);
     nextConfig = applyWizardMetadata(nextConfig, { command: "onboard", mode });
@@ -340,6 +350,7 @@ export async function runOnboardingWizard(
     return;
   }
 
+  // LEARNED: 工作区目录
   const workspaceInput =
     opts.workspace ??
     (flow === "quickstart"
@@ -370,6 +381,7 @@ export async function runOnboardingWizard(
     allowKeychainPrompt: false,
   });
   const authChoiceFromPrompt = opts.authChoice === undefined;
+  // LEARNED: 鉴权选择
   const authChoice =
     opts.authChoice ??
     (await promptAuthChoiceGrouped({
@@ -378,6 +390,7 @@ export async function runOnboardingWizard(
       includeSkip: true,
     }));
 
+  // LEARNED: 鉴权结果
   const authResult = await applyAuthChoice({
     authChoice,
     config: nextConfig,
@@ -392,6 +405,7 @@ export async function runOnboardingWizard(
   nextConfig = authResult.config;
 
   if (authChoiceFromPrompt) {
+    // LEARNED: 选择模型
     const modelSelection = await promptDefaultModel({
       config: nextConfig,
       prompter,
@@ -406,6 +420,7 @@ export async function runOnboardingWizard(
 
   await warnIfModelConfigLooksOff(nextConfig, prompter);
 
+  // LEARNED: 配置 gateway
   const gateway = await configureGatewayForOnboarding({
     flow,
     baseConfig,
@@ -418,6 +433,7 @@ export async function runOnboardingWizard(
   nextConfig = gateway.nextConfig;
   const settings = gateway.settings;
 
+  // 配置 channel
   if (opts.skipChannels ?? opts.skipProviders) {
     await prompter.note("Skipping channel setup.", "Channels");
   } else {
@@ -436,12 +452,14 @@ export async function runOnboardingWizard(
     });
   }
 
+  // LEARNED: 写入配置文件
   await writeConfigFile(nextConfig);
   logConfigUpdated(runtime);
   await ensureWorkspaceAndSessions(workspaceDir, runtime, {
     skipBootstrap: Boolean(nextConfig.agents?.defaults?.skipBootstrap),
   });
 
+  // LEARNED: 配置 skill
   if (opts.skipSkills) {
     await prompter.note("Skipping skills setup.", "Skills");
   } else {

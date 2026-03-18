@@ -17,6 +17,8 @@ export type SearchRowResult = {
   source: SearchSource;
 };
 
+// LEARNED: sqlite-vec 扩展相似度计算 + js 降级相似度计算
+
 export async function searchVector(params: {
   db: DatabaseSync;
   vectorTable: string;
@@ -93,6 +95,8 @@ export async function searchVector(params: {
     }));
 }
 
+// LEARNED: 全量列出所有 chunk
+
 export function listChunks(params: {
   db: DatabaseSync;
   providerModel: string;
@@ -132,6 +136,8 @@ export function listChunks(params: {
     source: row.source,
   }));
 }
+
+// LEARNED: FTS5 + BM25 关键词搜索
 
 export async function searchKeyword(params: {
   db: DatabaseSync;

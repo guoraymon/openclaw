@@ -2160,6 +2160,8 @@ export class MemoryIndexManager implements MemorySearchManager {
     );
   }
 
+  // LEARNED: 超时配置，远超 60 秒，本地 5 分钟（可能本地推理比较慢）
+
   private resolveEmbeddingTimeout(kind: "query" | "batch"): number {
     const isLocal = this.provider.id === "local";
     if (kind === "query") {
@@ -2167,6 +2169,8 @@ export class MemoryIndexManager implements MemorySearchManager {
     }
     return isLocal ? EMBEDDING_BATCH_TIMEOUT_LOCAL_MS : EMBEDDING_BATCH_TIMEOUT_REMOTE_MS;
   }
+
+  // LEARNED: 超时包装器
 
   private async embedQueryWithTimeout(text: string): Promise<number[]> {
     const timeoutMs = this.resolveEmbeddingTimeout("query");
@@ -2177,6 +2181,8 @@ export class MemoryIndexManager implements MemorySearchManager {
       `memory embeddings query timed out after ${Math.round(timeoutMs / 1000)}s`,
     );
   }
+
+  // LEARNED: 超时机制，
 
   private async withTimeout<T>(
     promise: Promise<T>,

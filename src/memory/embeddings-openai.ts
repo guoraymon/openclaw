@@ -21,6 +21,8 @@ export function normalizeOpenAiModel(model: string): string {
   return trimmed;
 }
 
+// LEARNED: 查询请求的实现
+
 export async function createOpenAiEmbeddingProvider(
   options: EmbeddingProviderOptions,
 ): Promise<{ provider: EmbeddingProvider; client: OpenAiEmbeddingClient }> {
@@ -60,6 +62,8 @@ export async function createOpenAiEmbeddingProvider(
     client,
   };
 }
+
+// LEARNED: 构建客户端
 
 export async function resolveOpenAiEmbeddingClient(
   options: EmbeddingProviderOptions,

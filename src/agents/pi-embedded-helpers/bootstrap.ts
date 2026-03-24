@@ -159,6 +159,8 @@ export async function ensureSessionHeader(params: {
   await fs.writeFile(file, `${JSON.stringify(entry)}\n`, "utf-8");
 }
 
+// LEARNED: content 头尾截断
+
 export function buildBootstrapContextFiles(
   files: WorkspaceBootstrapFile[],
   opts?: { warn?: (message: string) => void; maxChars?: number },

@@ -199,6 +199,8 @@ export async function ensureAgentWorkspace(params?: {
   };
 }
 
+// LEARNED: 查找记忆文件。主要是历史遗留有 MEMORY.md 和 memory.md 两个文件，需要都查找并去重（符号链接指向相同文件）
+
 async function resolveMemoryBootstrapEntries(
   resolvedDir: string,
 ): Promise<Array<{ name: WorkspaceBootstrapFileName; filePath: string }>> {
